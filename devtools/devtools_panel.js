@@ -1,8 +1,17 @@
-let analyzeSheetBt = document.getElementById("analyzeSheet");
+const DISCOVERY_DOCS = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
 
+let analyzeSheetBt = document.getElementById("analyzeSheet");
 analyzeSheetBt.addEventListener("click", onAnalyzeSheetClick);
 
 async function onAnalyzeSheetClick() {
+    chrome.storage.sync.get("token", ({ token }) => {
+        console.log('got the token', token);
+    });
+}
+
+function onGAPILoad() {
+    console.log("on Gapi Loaded");
+
     chrome.storage.sync.get("token", ({ token }) => {
         console.log('got the token', token);
 
@@ -12,24 +21,24 @@ async function onAnalyzeSheetClick() {
 
             if (matchResult.length == 2) {
                 const sheetId = matchResult[1];
-                let init = {
-                    method: 'GET',
-                    async: true,
-                    headers: {
-                        Authorization: 'Bearer ' + token,
-                        'Content-Type': 'application/json'
-                    },
-                    'contentType': 'json'
-                };
-                fetch(
-                        'https://sheets.googleapis.com//v4/spreadsheets/' + sheetId,
-                        init)
-                    .then((response) => response.json())
-                    .then(function(data) {
-                        console.log(data)
+
+                console.log('got the token', token);
+                gapi.client.init({
+                    discoveryDocs: DISCOVERY_DOCS,
+                }).then(function() {
+                    gapi.auth.setToken({
+                        'access_token': token,
                     });
 
+                    gapi.client.sheets.spreadsheets.get({
+                        spreadsheetId: sheetId
+                    }).then(function(response) {
+                        console.log(response);
+                    });
+                });
             }
         });
+
+
     });
 }
