@@ -38,4 +38,6 @@ class SM2 {
     }
 }
 
-module.exports = SM2;
+if (typeof module !== 'undefined') {
+    module.exports = SM2;
+}
