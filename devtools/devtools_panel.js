@@ -1,7 +1,9 @@
 const DISCOVERY_DOCS = ["https://sheets.googleapis.com/$discovery/rest?version=v4"];
 
 let analyzeSheetBt = document.getElementById("analyzeSheet");
-let sheetId;
+let spreadsheetId;
+let sheet;
+
 analyzeSheetBt.addEventListener("click", onAnalyzeSheetClick);
 
 async function onAnalyzeSheetClick() {
@@ -26,7 +28,7 @@ function onGAPILoad() {
             const matchResult = tabs[0].url.match(sheetIdRegex);
 
             if (matchResult.length == 2) {
-                sheetId = matchResult[1];
+                spreadsheetId = matchResult[1];
 
                 console.log('got the token', token);
                 gapi.client.init({
@@ -37,9 +39,9 @@ function onGAPILoad() {
                     });
 
                     gapi.client.sheets.spreadsheets.get({
-                        spreadsheetId: sheetId
+                        spreadsheetId: spreadsheetId
                     }).then(function(response) {
-                        console.log(response);
+                        onSpreadsheetRead(response);
                     });
                 });
             }
@@ -49,16 +51,27 @@ function onGAPILoad() {
     });
 }
 
-function readMetaForRow(row) {
-    var request = gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: sheetId,
-        range: "F" + row
+function readMetaForDeck(title, maxRow) {
+    if (title === "Settings") {
+        return;
+    }
+    const request = gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: spreadsheetId,
+        range: `${title}!E1:F${maxRow}`
     });
     request.then(function(response) {
-        console.log(response.result);
-        let sm2Meta = JSON.parse(response.result.values[0][0]);
-        console.log(SM2.calculate(sm2Meta, 3));
+        console.log(title);
+        console.log(response.result.values);
     }, function(reason) {
         console.error('error: ' + reason.result.error.message);
     });
+}
+
+function onSpreadsheetRead(spreadsheet) {
+    sheet = spreadsheet;
+    console.log(spreadsheet);
+    console.log("you have following decks:");
+    sheet.result.sheets.forEach((x) => {
+        readMetaForDeck(x.properties.title, x.properties.gridProperties.rowCount);
+    })
 }
