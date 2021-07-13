@@ -1,0 +1,1 @@
+chrome.devtools.panels.create("MemSheet", null, "src/devtools/devtools_panel.html", function(panel) { console.log("devtools.js opened panel."); });
